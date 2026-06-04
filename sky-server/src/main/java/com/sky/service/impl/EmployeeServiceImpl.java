@@ -8,12 +8,15 @@ import com.sky.constant.StatusConstant;
 import com.sky.context.BaseContext;
 import com.sky.dto.EmployeeLoginDTO;
 import com.sky.dto.EmployeePageQueryDTO;
+import com.sky.dto.PasswordEditDTO;
 import com.sky.entity.Employee;
 import com.sky.exception.AccountLockedException;
 import com.sky.exception.AccountNotFoundException;
+import com.sky.exception.BaseException;
 import com.sky.exception.PasswordErrorException;
 import com.sky.mapper.EmployeeMapper;
 import com.sky.result.PageResult;
+import com.sky.result.Result;
 import com.sky.service.EmployeeService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -95,6 +98,46 @@ public class EmployeeServiceImpl implements EmployeeService {
                 .updateUser(BaseContext.getCurrentId())
                 .build();
         employeeMapper.update(employee);
+    }
+
+    @Override
+    public Employee getById(Long id) {
+        Employee employee = employeeMapper.getById(id);
+        employee.setPassword("****");
+        return employee;
+    }
+
+    @Override
+    public void update(Employee employee) {
+        employee.setUpdateTime(LocalDateTime.now());
+        employee.setUpdateUser(BaseContext.getCurrentId());
+        employeeMapper.update(employee);
+    }
+
+    @Override
+    public Result editPassword(PasswordEditDTO passwordEditDTO) {
+        //1. 获取当前登录用户ID
+        Long empId = BaseContext.getCurrentId();
+        //2. 构建查询条件：id+加密后的旧密码
+        Employee empCondition = Employee.builder()
+                .id(empId)
+                .password(DigestUtils.md5DigestAsHex(passwordEditDTO.getOldPassword().getBytes()))
+                .build();
+        //3. 根据id+旧密码查询数据库，校验原密码是否正确
+        Employee dbEmp = employeeMapper.getByIdAndPwd(empCondition);
+        if(dbEmp == null){
+            //原密码错误，抛出自定义业务异常
+            throw new BaseException("原密码输入错误");
+        }
+        //4. 原密码正确，加密新密码，执行更新
+        Employee updateEmp = Employee.builder()
+                .id(empId)
+                .password(DigestUtils.md5DigestAsHex(passwordEditDTO.getNewPassword().getBytes()))
+                .updateTime(LocalDateTime.now())
+                .updateUser(empId)
+                .build();
+        employeeMapper.update(updateEmp);
+        return Result.success("密码修改成功");
     }
 
 }

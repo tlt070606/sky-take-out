@@ -2,8 +2,10 @@ package com.sky.service;
 
 import com.sky.dto.EmployeeLoginDTO;
 import com.sky.dto.EmployeePageQueryDTO;
+import com.sky.dto.PasswordEditDTO;
 import com.sky.entity.Employee;
 import com.sky.result.PageResult;
+import com.sky.result.Result;
 
 public interface EmployeeService {
 
@@ -19,4 +21,10 @@ public interface EmployeeService {
     PageResult page(EmployeePageQueryDTO employeePageQuery);
 
     void startOrStop(Integer status, Long id);
+
+    Employee getById(Long id);
+
+    void update(Employee employee);
+
+    Result editPassword(PasswordEditDTO passwordEditDTO);
 }
