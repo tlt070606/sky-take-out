@@ -89,4 +89,10 @@ public class EmployeeController {
         return Result.success(pageResult);
     }
 
+    @PostMapping("/status/{status}")
+    public Result startOrStop(@PathVariable Integer status,Long id){
+        log.info("员工状态：{},{}",status, id);
+        employeeService.startOrStop(status,id);
+        return Result.success();
+    }
 }
